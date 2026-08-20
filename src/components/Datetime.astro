@@ -1,0 +1,65 @@
+---
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+import IconCalendar from "@/assets/icons/IconCalendar.svg";
+import config from "@/config";
+import { useTranslations } from "@/i18n";
+
+import "dayjs/locale/ko";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+const locale = Astro.currentLocale ?? config.site.lang;
+dayjs.locale(locale);
+
+type Props = {
+	class?: string;
+	size?: "sm" | "lg";
+	pubDatetime: string | Date;
+	timezone?: string;
+	modDatetime?: string | Date | null;
+};
+
+const {
+	pubDatetime,
+	modDatetime,
+	size = "sm",
+	class: className = "",
+	timezone: postTimezone,
+} = Astro.props;
+
+const t = useTranslations(locale);
+
+const isModified = modDatetime && modDatetime > pubDatetime;
+
+const datetime = dayjs(isModified ? modDatetime : pubDatetime).tz(
+	postTimezone ?? config.site.timezone,
+);
+
+const date = datetime.format(
+	locale.startsWith("ko") ? "YYYY년 MM월 DD일" : "D MMM, YYYY",
+);
+---
+
+<div
+	class:list={["text-muted-foreground flex items-center gap-x-2", className]}
+>
+	<IconCalendar
+		class:list={[
+      "inline-block size-6 min-w-5.5",
+      { "scale-90": size === "sm" },
+    ]}
+	/>
+	{isModified && (
+      <span class:list={["text-sm", { "sm:text-base": size === "lg" }]}>
+        {t.post.updatedAt}:
+      </span>
+    )}
+	<time
+		class:list={["text-sm", { "sm:text-base": size === "lg" }]}
+		datetime={datetime.toISOString()}
+	>
+		{date}
+	</time>
+</div>
